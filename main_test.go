@@ -66,15 +66,15 @@ func TestParseWithListOfValues(t *testing.T) {
 func TestParseWithSteps(t *testing.T) {
 	assert := assert.New(t)
 
-	args := []string{"0", "9,21", "*", "*/3", "*", "/crongo"}
+	args := []string{"0", "*/12", "*/4", "*/3", "*", "/crongo"}
 
 	lines := parse(args)
 
 	expectedLines := []string{
 		"minute        0",
-		"hour          9 21",
-		"day of month  1 - 31",
-		"month         3 6 9 12",
+		"hour          0 12",
+		"day of month  1 5 9 13 17 21 25 29",
+		"month         1 4 7 10 13",
 		"day of week   0 - 6",
 		"command       /crongo",
 	}

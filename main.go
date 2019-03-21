@@ -36,15 +36,15 @@ func parse(args []string) []string {
 
 		switch label {
 		case "minute":
-			values = parseExpression(arg, 60, 1)
+			values = parseExpression(arg, 0, 59)
 		case "hour":
-			values = parseExpression(arg, 24, 1)
+			values = parseExpression(arg, 0, 23)
 		case "day of month":
-			values = parseExpression(arg, 31, 0)
+			values = parseExpression(arg, 1, 31)
 		case "month":
-			values = parseExpression(arg, 12, 0)
+			values = parseExpression(arg, 1, 12)
 		case "day of week":
-			values = parseExpression(arg, 7, 1)
+			values = parseExpression(arg, 0, 6)
 		default:
 			values = arg // command
 		}
@@ -55,13 +55,13 @@ func parse(args []string) []string {
 	return result
 }
 
-func parseExpression(expression string, max, offset int) string {
+func parseExpression(expression string, min, max int) string {
 	anyValue := regexp.MustCompile(`^\*$`)
 	stepsOfValues := regexp.MustCompile(`^\*\/(\d{1,2})$`)
 
 	switch {
 	case anyValue.MatchString(expression):
-		return fullRange(1, max, offset)
+		return fullRange(min, max)
 	case stepsOfValues.MatchString(expression):
 		submatch := stepsOfValues.FindStringSubmatch(expression)
 		step, err := strconv.Atoi(submatch[1])
@@ -69,23 +69,24 @@ func parseExpression(expression string, max, offset int) string {
 			panic("could not parse integer after regexp match")
 		}
 
-		return steppedRange(1, max, step)
+		return steppedRange(min, max, step)
 	default:
 		return strings.Replace(expression, ",", " ", max-1)
 	}
 }
 
-func fullRange(min, max, offset int) string {
-	return fmt.Sprintf("%d - %d", min-offset, max-offset)
+func fullRange(min, max int) string {
+	return fmt.Sprintf("%d - %d", min, max)
 }
 
 func steppedRange(min, max, step int) string {
-	count := max / step // discarding remainder
 	var values strings.Builder
 
-	values.WriteString(strconv.Itoa(step))
-	for i := 1; i < count; i++ {
-		value := i*step + step
+	count := max / step // discarding remainder
+
+	values.WriteString(strconv.Itoa(min))
+	for i := 1; i <= count; i++ {
+		value := i*step + min
 		values.WriteString(" ")
 		values.WriteString(strconv.Itoa(value))
 	}
