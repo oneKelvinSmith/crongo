@@ -81,6 +81,7 @@ func TestParseWithSteps(t *testing.T) {
 
 	assert.Equal(lines, expectedLines, "could not parse cron expression")
 }
+
 func TestParseWithRange(t *testing.T) {
 	assert := assert.New(t)
 

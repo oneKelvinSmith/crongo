@@ -85,33 +85,30 @@ func parseExpression(expression string, min, max int) string {
 	}
 }
 
-func fullRange(min, max int) string {
-	return fmt.Sprintf("%d - %d", min, max)
+func formatRange(b *strings.Builder, min, max int, next func(int) int) string {
+	b.Reset()
+	b.WriteString(strconv.Itoa(min))
+	for i := min + 1; i <= max; i++ {
+		b.WriteString(" ")
+		b.WriteString(strconv.Itoa(next(i)))
+	}
+
+	return b.String()
 }
 
 func steppedRange(min, max, step int) string {
 	var values strings.Builder
 
 	count := max / step // discarding remainder
-
-	values.WriteString(strconv.Itoa(min))
-	for i := 1; i <= count; i++ {
-		value := i*step + min
-		values.WriteString(" ")
-		values.WriteString(strconv.Itoa(value))
-	}
-
-	return values.String()
+	return formatRange(&values, min, count+min, func(value int) int {
+		return (value-min)*step + min
+	})
 }
 
 func subRange(min, max int) string {
 	var values strings.Builder
 
-	values.WriteString(strconv.Itoa(min))
-	for i := min + 1; i <= max; i++ {
-		values.WriteString(" ")
-		values.WriteString(strconv.Itoa(i))
-	}
-
-	return values.String()
+	return formatRange(&values, min, max, func(value int) int {
+		return value
+	})
 }
