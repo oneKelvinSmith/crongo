@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -54,23 +56,39 @@ func parse(args []string) []string {
 }
 
 func parseExpression(expression string, max, offset int) string {
-	switch expression {
-	case "*":
+	anyValue := regexp.MustCompile(`^\*$`)
+	stepsOfValues := regexp.MustCompile(`^\*\/(\d{1,2})$`)
+
+	switch {
+	case anyValue.MatchString(expression):
 		return fullRange(1, max, offset)
+	case stepsOfValues.MatchString(expression):
+		submatch := stepsOfValues.FindStringSubmatch(expression)
+		step, err := strconv.Atoi(submatch[1])
+		if err != nil {
+			panic("could not parse integer after regexp match")
+		}
+
+		return steppedRange(1, max, step)
 	default:
 		return strings.Replace(expression, ",", " ", max-1)
 	}
-
 }
 
 func fullRange(min, max, offset int) string {
 	return fmt.Sprintf("%d - %d", min-offset, max-offset)
 }
 
-func makeRange(min, max, step int) []int {
-	result := make([]int, max)
-	for i := range result {
-		result[i] = i + step
+func steppedRange(min, max, step int) string {
+	count := max / step // discarding remainder
+	var values strings.Builder
+
+	values.WriteString(strconv.Itoa(step))
+	for i := 1; i < count; i++ {
+		value := i*step + step
+		values.WriteString(" ")
+		values.WriteString(strconv.Itoa(value))
 	}
-	return result
+
+	return values.String()
 }
