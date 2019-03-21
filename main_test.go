@@ -43,3 +43,22 @@ func TestParseWithSimpleValues(t *testing.T) {
 
 	assert.Equal(lines, expectedLines, "could not parse cron expression")
 }
+
+func TestParseWithListOfValues(t *testing.T) {
+	assert := assert.New(t)
+
+	args := []string{"5,7,9", "*", "*", "*", "*", "/crongo"}
+
+	lines := parse(args)
+
+	expectedLines := []string{
+		"minute        5 7 9",
+		"hour          0 - 23",
+		"day of month  1 - 31",
+		"month         1 - 12",
+		"day of week   0 - 6",
+		"command       /crongo",
+	}
+
+	assert.Equal(lines, expectedLines, "could not parse cron expression")
+}

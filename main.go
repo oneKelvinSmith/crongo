@@ -26,40 +26,38 @@ func main() {
 
 func parse(args []string) []string {
 	result := make([]string, lineCount)
-	var expression string
+	var values string
 
 	for i, arg := range args {
 		label := labels[i]
 
 		switch label {
 		case "minute":
-			expression = parseExpression(arg, 60, 1)
+			values = parseExpression(arg, 60, 1)
 		case "hour":
-			expression = parseExpression(arg, 24, 1)
+			values = parseExpression(arg, 24, 1)
 		case "day of month":
-			expression = parseExpression(arg, 31, 0)
+			values = parseExpression(arg, 31, 0)
 		case "month":
-			expression = parseExpression(arg, 12, 0)
+			values = parseExpression(arg, 12, 0)
 		case "day of week":
-			expression = parseExpression(arg, 7, 1)
+			values = parseExpression(arg, 7, 1)
 		default:
-			expression = arg // command
+			values = arg // command
 		}
 
-		result[i] = fmt.Sprintf("%- 14s%s", label, expression)
+		result[i] = fmt.Sprintf("%- 14s%s", label, values)
 	}
 
 	return result
 }
 
-func parseExpression(arg string, max, offset int) string {
-	fmt.Print(arg)
-	switch arg {
+func parseExpression(expression string, max, offset int) string {
+	switch expression {
 	case "*":
 		return fullRange(1, max, offset)
 	default:
-		fmt.Println(makeRange(1, max, offset))
-		return arg
+		return strings.Replace(expression, ",", " ", max-1)
 	}
 
 }
