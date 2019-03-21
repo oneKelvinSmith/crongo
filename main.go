@@ -62,7 +62,7 @@ func parseExpression(expression string, min, max int) string {
 
 	switch {
 	case anyValue.MatchString(expression):
-		return fullRange(min, max)
+		return subRange(min, max)
 	case stepsOfValues.MatchString(expression):
 		submatch := stepsOfValues.FindStringSubmatch(expression)
 		step, err := strconv.Atoi(submatch[1])
