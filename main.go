@@ -29,6 +29,7 @@ func main() {
 
 func parse(args []string) []string {
 	result := make([]string, lineCount)
+	var builder strings.Builder
 	var values string
 
 	for i, arg := range args {
@@ -36,15 +37,15 @@ func parse(args []string) []string {
 
 		switch label {
 		case "minute":
-			values = parseExpression(arg, 0, 59)
+			values = parseExpression(&builder, arg, 0, 59)
 		case "hour":
-			values = parseExpression(arg, 0, 23)
+			values = parseExpression(&builder, arg, 0, 23)
 		case "day of month":
-			values = parseExpression(arg, 1, 31)
+			values = parseExpression(&builder, arg, 1, 31)
 		case "month":
-			values = parseExpression(arg, 1, 12)
+			values = parseExpression(&builder, arg, 1, 12)
 		case "day of week":
-			values = parseExpression(arg, 0, 6)
+			values = parseExpression(&builder, arg, 0, 6)
 		default:
 			values = arg // command
 		}
@@ -55,14 +56,14 @@ func parse(args []string) []string {
 	return result
 }
 
-func parseExpression(expression string, min, max int) string {
+func parseExpression(b *strings.Builder, expression string, min, max int) string {
 	anyValue := regexp.MustCompile(`^\*$`)
 	stepsOfValues := regexp.MustCompile(`^\*\/(\d{1,2})$`)
 	rangeOfValues := regexp.MustCompile(`^(\d{1,2})-(\d{1,2})$`)
 
 	switch {
 	case anyValue.MatchString(expression):
-		return subRange(min, max)
+		return subRange(b, min, max)
 	case stepsOfValues.MatchString(expression):
 		submatch := stepsOfValues.FindStringSubmatch(expression)
 		step, err := strconv.Atoi(submatch[1])
@@ -70,7 +71,7 @@ func parseExpression(expression string, min, max int) string {
 			panic("could not parse integer after regexp match")
 		}
 
-		return steppedRange(min, max, step)
+		return steppedRange(b, min, max, step)
 	case rangeOfValues.MatchString(expression):
 		submatch := rangeOfValues.FindStringSubmatch(expression)
 		min, err := strconv.Atoi(submatch[1])
@@ -79,7 +80,7 @@ func parseExpression(expression string, min, max int) string {
 			panic("could not parse integer after regexp match")
 		}
 
-		return subRange(min, max)
+		return subRange(b, min, max)
 	default:
 		return strings.Replace(expression, ",", " ", max-1)
 	}
@@ -96,19 +97,15 @@ func formatRange(b *strings.Builder, min, max int, next func(int) int) string {
 	return b.String()
 }
 
-func steppedRange(min, max, step int) string {
-	var values strings.Builder
-
+func steppedRange(b *strings.Builder, min, max, step int) string {
 	count := max / step // discarding remainder
-	return formatRange(&values, min, count+min, func(value int) int {
+	return formatRange(b, min, count+min, func(value int) int {
 		return (value-min)*step + min
 	})
 }
 
-func subRange(min, max int) string {
-	var values strings.Builder
-
-	return formatRange(&values, min, max, func(value int) int {
+func subRange(b *strings.Builder, min, max int) string {
+	return formatRange(b, min, max, func(value int) int {
 		return value
 	})
 }
