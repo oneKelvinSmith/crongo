@@ -58,6 +58,7 @@ func parse(args []string) []string {
 func parseExpression(expression string, min, max int) string {
 	anyValue := regexp.MustCompile(`^\*$`)
 	stepsOfValues := regexp.MustCompile(`^\*\/(\d{1,2})$`)
+	rangeOfValues := regexp.MustCompile(`^(\d{1,2})-(\d{1,2})$`)
 
 	switch {
 	case anyValue.MatchString(expression):
@@ -70,6 +71,15 @@ func parseExpression(expression string, min, max int) string {
 		}
 
 		return steppedRange(min, max, step)
+	case rangeOfValues.MatchString(expression):
+		submatch := rangeOfValues.FindStringSubmatch(expression)
+		min, err := strconv.Atoi(submatch[1])
+		max, err := strconv.Atoi(submatch[2])
+		if err != nil {
+			panic("could not parse integer after regexp match")
+		}
+
+		return subRange(min, max)
 	default:
 		return strings.Replace(expression, ",", " ", max-1)
 	}
@@ -89,6 +99,18 @@ func steppedRange(min, max, step int) string {
 		value := i*step + min
 		values.WriteString(" ")
 		values.WriteString(strconv.Itoa(value))
+	}
+
+	return values.String()
+}
+
+func subRange(min, max int) string {
+	var values strings.Builder
+
+	values.WriteString(strconv.Itoa(min))
+	for i := min + 1; i <= max; i++ {
+		values.WriteString(" ")
+		values.WriteString(strconv.Itoa(i))
 	}
 
 	return values.String()
