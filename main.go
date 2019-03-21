@@ -19,7 +19,8 @@ var labels = [lineCount]string{
 
 func main() {
 	flag.Parse()
-	lines := parse(flag.Args())
+	args := strings.Split(flag.Arg(0), " ")
+	lines := parse(args)
 	result := strings.Join(lines[:], "\n")
 	fmt.Println(result)
 }
