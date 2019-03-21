@@ -64,26 +64,37 @@ func parseExpression(b *strings.Builder, expression string, min, max int) string
 	switch {
 	case anyValue.MatchString(expression):
 		return subRange(b, min, max)
+
 	case stepsOfValues.MatchString(expression):
-		submatch := stepsOfValues.FindStringSubmatch(expression)
-		step, err := strconv.Atoi(submatch[1])
-		if err != nil {
-			panic("could not parse integer after regexp match")
-		}
-
+		step := step(stepsOfValues, expression)
 		return steppedRange(b, min, max, step)
-	case rangeOfValues.MatchString(expression):
-		submatch := rangeOfValues.FindStringSubmatch(expression)
-		min, err := strconv.Atoi(submatch[1])
-		max, err := strconv.Atoi(submatch[2])
-		if err != nil {
-			panic("could not parse integer after regexp match")
-		}
 
+	case rangeOfValues.MatchString(expression):
+		min, max := minAndMax(rangeOfValues, expression)
 		return subRange(b, min, max)
+
 	default:
 		return strings.Replace(expression, ",", " ", max-1)
 	}
+}
+
+func step(matcher *regexp.Regexp, expression string) (step int) {
+	submatch := matcher.FindStringSubmatch(expression)
+	step, err := strconv.Atoi(submatch[1])
+	if err != nil {
+		panic("could not parse integer after regexp match")
+	}
+	return
+}
+
+func minAndMax(matcher *regexp.Regexp, expression string) (min, max int) {
+	submatch := matcher.FindStringSubmatch(expression)
+	min, err := strconv.Atoi(submatch[1])
+	max, err = strconv.Atoi(submatch[2])
+	if err != nil {
+		panic("could not parse integer after regexp match")
+	}
+	return
 }
 
 func formatRange(b *strings.Builder, min, max int, next func(int) int) string {
