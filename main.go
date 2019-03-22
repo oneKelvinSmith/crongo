@@ -27,9 +27,11 @@ func main() {
 	fmt.Println(result)
 }
 
+type parser struct{ strings.Builder }
+
 func parse(args []string) []string {
 	result := make([]string, lineCount)
-	var builder strings.Builder
+	var p parser
 	var values string
 
 	for i, arg := range args {
@@ -37,15 +39,15 @@ func parse(args []string) []string {
 
 		switch label {
 		case "minute":
-			values = parseExpression(&builder, arg, 0, 59)
+			values = p.parseExpression(arg, 0, 59)
 		case "hour":
-			values = parseExpression(&builder, arg, 0, 23)
+			values = p.parseExpression(arg, 0, 23)
 		case "day of month":
-			values = parseExpression(&builder, arg, 1, 31)
+			values = p.parseExpression(arg, 1, 31)
 		case "month":
-			values = parseExpression(&builder, arg, 1, 12)
+			values = p.parseExpression(arg, 1, 12)
 		case "day of week":
-			values = parseExpression(&builder, arg, 0, 6)
+			values = p.parseExpression(arg, 0, 6)
 		default:
 			values = arg // command
 		}
@@ -56,22 +58,22 @@ func parse(args []string) []string {
 	return result
 }
 
-func parseExpression(b *strings.Builder, expression string, min, max int) string {
+func (p *parser) parseExpression(expression string, min, max int) string {
 	anyValue := regexp.MustCompile(`^\*$`)
 	stepsOfValues := regexp.MustCompile(`^\*\/(\d{1,2})$`)
 	rangeOfValues := regexp.MustCompile(`^(\d{1,2})-(\d{1,2})$`)
 
 	switch {
 	case anyValue.MatchString(expression):
-		return subRange(b, min, max)
+		return p.subRange(min, max)
 
 	case stepsOfValues.MatchString(expression):
 		step := step(stepsOfValues, expression)
-		return steppedRange(b, min, max, step)
+		return p.steppedRange(min, max, step)
 
 	case rangeOfValues.MatchString(expression):
 		min, max := minAndMax(rangeOfValues, expression)
-		return subRange(b, min, max)
+		return p.subRange(min, max)
 
 	default:
 		return strings.Replace(expression, ",", " ", max-1)
@@ -97,26 +99,26 @@ func minAndMax(matcher *regexp.Regexp, expression string) (min, max int) {
 	return
 }
 
-func formatRange(b *strings.Builder, min, max int, next func(int) int) string {
-	b.Reset()
-	b.WriteString(strconv.Itoa(min))
+func (p *parser) formatRange(min, max int, next func(int) int) string {
+	p.Reset()
+	p.WriteString(strconv.Itoa(min))
 	for i := min + 1; i <= max; i++ {
-		b.WriteString(" ")
-		b.WriteString(strconv.Itoa(next(i)))
+		p.WriteString(" ")
+		p.WriteString(strconv.Itoa(next(i)))
 	}
 
-	return b.String()
+	return p.String()
 }
 
-func steppedRange(b *strings.Builder, min, max, step int) string {
+func (p *parser) steppedRange(min, max, step int) string {
 	count := max / step // discarding remainder
-	return formatRange(b, min, count+min, func(value int) int {
+	return p.formatRange(min, count+min, func(value int) int {
 		return (value-min)*step + min
 	})
 }
 
-func subRange(b *strings.Builder, min, max int) string {
-	return formatRange(b, min, max, func(value int) int {
+func (p *parser) subRange(min, max int) string {
+	return p.formatRange(min, max, func(value int) int {
 		return value
 	})
 }
