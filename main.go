@@ -21,10 +21,17 @@ var labels = [lineCount]string{
 
 func main() {
 	flag.Parse()
+
 	args := strings.Split(flag.Arg(0), " ")
-	lines := parse(args)
-	result := strings.Join(lines[:], "\n")
-	fmt.Println(result)
+
+	if len(args) != lineCount {
+		fmt.Println("Please provide a valid cron expression such as:")
+		fmt.Println("$ crongo \"*/15 0 1,15 * 1-5 /user/bin/find\"")
+	} else {
+		lines := parse(args)
+
+		fmt.Println(strings.Join(lines[:], "\n"))
+	}
 }
 
 type parser struct{ strings.Builder }
