@@ -24,7 +24,7 @@ func main() {
 
 	args := strings.Split(flag.Arg(0), " ")
 
-	if len(args) != lineCount {
+	if len(args) < lineCount {
 		fmt.Println("Please provide a valid cron expression such as:")
 		fmt.Println("$ crongo \"*/15 0 1,15 * 1-5 /user/bin/find\"")
 	} else {
@@ -37,11 +37,13 @@ func main() {
 type parser struct{ strings.Builder }
 
 func parse(args []string) []string {
+	fmt.Println(args)
 	result := make([]string, lineCount)
+
 	var p parser
 	var values string
 
-	for i, arg := range args {
+	for i, arg := range args[:lineCount] {
 		label := labels[i]
 
 		switch label {
@@ -56,7 +58,11 @@ func parse(args []string) []string {
 		case "day of week":
 			values = p.parseExpression(arg, 0, 6)
 		default:
-			values = arg // command
+			if len(args) > lineCount {
+				values = arg + " " + args[i+1]
+			} else {
+				values = arg
+			}
 		}
 
 		result[i] = fmt.Sprintf("%- 14s%s", label, values)
